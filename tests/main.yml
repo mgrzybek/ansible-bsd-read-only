@@ -1,0 +1,66 @@
+---
+
+- hosts: all
+  become: true
+  become_method: sudo
+  gather_facts: false
+  tasks:
+  - name: Install python
+    register: python_result
+    raw: pkg install -y python
+    ignore_errors: true
+    changed_when:
+    - python_result.stdout_lines[-1] != 'The most recent versions of packages are already installed'
+
+- hosts: all
+  become: true
+  become_method: sudo
+
+  vars:
+    ansible_python_interpreter: /usr/local/bin/python
+    ansible_remote_tmp: /tmp
+
+  pre_tasks:
+  roles:
+  - role: ../ansible-freebsd-read-only
+
+  post_tasks:
+  - name: Post-Tasks | Run setup
+    setup:
+
+  - name: Post-Tasks | Include OS variables
+    include_vars: "{{ lookup('first_found', params) }}"
+    vars:
+      params:
+        files:
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ ansible_distribution | lower }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+        paths:
+        - '../vars'
+
+  - name: Post-tasks | Check rootfs mounts
+    changed_when: false
+    command: grep "/dev/ufs/rootfs / ufs ro 0 0" /etc/fstab
+
+  - name: Post-tasks | Check tmpfs mounts
+    changed_when: false
+    with_items: "{{ bsd_read_only_tmpfs_mountpoints }}"
+    command: grep "tmpfs {{ item.path }} tmpfs {{ item.opts }}" /etc/fstab
+
+  - name: Post-tasks | Get mqueue status
+    register: stat_result
+    stat: path={{ bsd_read_only_mqueue }}
+
+  - name: Post-Tasks | Assert
+    assert:
+      that:
+      - stat_result.stat.islnk is defined
+      - stat_result.stat.lnk_source is defined
+      - stat_result.stat.lnk_target is defined
+      - stat_result.stat.islnk | lower == 'true'
+      - stat_result.stat.lnk_source | lower == '/dev/null'
+      - stat_result.stat.lnk_target | lower == '/dev/null'
+

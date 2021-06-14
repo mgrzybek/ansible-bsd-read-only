@@ -1,0 +1,38 @@
+---
+
+- name: Post-Install | Disable mailbox
+  when: mqueue_stat.islnk | lower == 'false'
+  block:
+  - name: Post-Install | Remove mqueue directory
+    file: path={{ mqueue_stat.path }} state=absent
+
+  - name: Post-Install | Create mqueue symlink
+    file: path={{ mqueue_stat.path }} src=/dev/null state=link
+
+- name: Post-Install | Set tmpfs paths
+  with_items: "{{ bsd_read_only_tmpfs_mountpoints }}"
+  notify: reboot
+  mount:
+    path: "{{ item.path }}"
+    src: tmpfs
+    fstype: tmpfs
+    opts: "{{ item.opts }}"
+    state: present
+
+- name: Post-Install | Configure dhclient
+  notify: reboot
+  template:
+    src: dhclient.j2
+    dest: /etc/rc.conf.d/dhclient
+    owner: root
+    mode: 0644
+
+- name: Post-Install | Set rootfs read only
+  notify: reboot
+  mount:
+    path: /
+    src: /dev/ufs/rootfs
+    fstype: ufs
+    opts: ro
+    state: present
+

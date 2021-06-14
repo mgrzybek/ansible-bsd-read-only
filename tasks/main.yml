@@ -1,0 +1,36 @@
+---
+# tasks file for ansible-bsd-read-only
+
+- name: Variables by OS
+  include_vars: "{{ item }}"
+  tags: always
+  with_first_found:
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+    - "{{ ansible_distribution | lower }}.yml"
+    - "{{ ansible_os_family | lower }}.yml"
+
+- tags: bsd_read_only-pre-install
+  import_tasks: bsd_read_only_pre_install.yml
+
+- tags: bsd_read_only-install
+  block:
+  - import_tasks: bsd_read_only_install.yml
+
+  rescue:
+  - name: Install | Set root partition rw
+    command: /sbin/mount -uw /
+
+  - import_tasks: bsd_read_only_install.yml
+
+- tags: bsd_read_only-post-install
+  block:
+  - import_tasks: bsd_read_only_post_install.yml
+
+  rescue:
+  - name: Install | Set root partition rw
+    command: /sbin/mount -uw /
+
+  - import_tasks: bsd_read_only_post_install.yml
+

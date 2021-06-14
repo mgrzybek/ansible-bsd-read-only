@@ -1,0 +1,7 @@
+---
+
+- name: Install | Install custom /var creation script (without remount root rw)
+  file: src=var dest=/etc/rc.d/var mode=755 owner=root group=wheel
+  notify:
+  - reboot
+

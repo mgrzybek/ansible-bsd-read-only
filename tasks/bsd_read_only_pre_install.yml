@@ -1,0 +1,21 @@
+---
+
+- name: Pre-Install | Check operating system compatibility
+  assert:
+    fail_msg: This role must be applied to FreeBSD systems
+    that: ansible_os_family == "FreeBSD"
+
+- name: Pre-Install | Get installed packages
+  changed_when: false
+  register: pkg_info
+  shell: pkg info | awk '{print $1}'
+
+- name: Pre-Install | Get mqueue status
+  register: stat_result
+  stat: path={{ bsd_read_only_mqueue }}
+
+- name: Pre-Install | Set facts
+  set_fact:
+    installed_packages: "{{ pkg_info.stdout_lines }}"
+    mqueue_stat: "{{ stat_result.stat }}"
+

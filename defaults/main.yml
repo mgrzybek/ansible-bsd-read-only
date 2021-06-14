@@ -1,0 +1,6 @@
+---
+
+freebsd_qppliance_package_state: present
+cache_timeout: 600
+
+bsd_read_only_mqueue: /var/spool/clientmqueue
