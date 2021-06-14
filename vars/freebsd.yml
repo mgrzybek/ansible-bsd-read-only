@@ -1,0 +1,9 @@
+---
+
+bsd_read_only_tmpfs_mountpoints:
+- path: /tmp
+  size_mb: 50
+  opts: rw,mode=1777,size=50m
+- path: /var/log
+  size_mb: 50
+  opts: rw,mode=755,size=50m
