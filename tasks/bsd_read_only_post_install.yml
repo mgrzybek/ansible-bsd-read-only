@@ -1,5 +1,3 @@
----
-
 - name: Post-Install | Disable mailbox
   when:
   - mqueue_stat.exists | lower == 'true'
@@ -12,13 +10,13 @@
     file: path={{ mqueue_stat.path }} src=/dev/null state=link
 
 - name: Post-Install | Set tmpfs paths
-  with_items: "{{ bsd_read_only_tmpfs_mountpoints }}"
+  with_items: '{{ bsd_read_only_tmpfs_mountpoints }}'
   notify: reboot
   mount:
-    path: "{{ item.path }}"
+    path: '{{ item.path }}'
     src: tmpfs
     fstype: tmpfs
-    opts: "{{ item.opts }}"
+    opts: '{{ item.opts }}'
     state: present
 
 - name: Post-Install | Configure dhclient
@@ -47,6 +45,17 @@
     path: /usr/local/etc/pkg.conf
     state: present
     regexp: '#PKG_DBDIR ='
-    line: 'PKG_DBDIR = "/mnt/pkg";'
-  
+    line: PKG_DBDIR = "/mnt/pkg";
+
+- name: Post-Install | Purge pkg cache (1/2)
+  register: files_to_delete
+  find:
+    paths: /var/cache/pkg
+    patterns: '*.pkg'
+
+- name: Post-Install | Purge pkg cache (2/2)
+  with_items: '{{ files_to_delete.files }}'
+  file:
+    path: '{{ item.path }}'
+    state: absent
 
