@@ -1,5 +1,3 @@
----
-
 - hosts: all
   become: true
   become_method: sudo
@@ -33,13 +31,13 @@
     vars:
       params:
         files:
-        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
-        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
-        - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
-        - "{{ ansible_distribution | lower }}.yml"
-        - "{{ ansible_os_family | lower }}.yml"
+        - '{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml'
+        - '{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml'
+        - '{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml'
+        - '{{ ansible_distribution | lower }}.yml'
+        - '{{ ansible_os_family | lower }}.yml'
         paths:
-        - '../vars'
+        - ../vars
 
   - name: Post-tasks | Check rootfs mounts
     changed_when: false
@@ -47,7 +45,7 @@
 
   - name: Post-tasks | Check tmpfs mounts
     changed_when: false
-    with_items: "{{ bsd_read_only_tmpfs_mountpoints }}"
+    with_items: '{{ bsd_read_only_tmpfs_mountpoints }}'
     command: grep "tmpfs {{ item.path }} tmpfs {{ item.opts }}" /etc/fstab
 
   - name: Post-tasks | Get mqueue status

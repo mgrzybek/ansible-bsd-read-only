@@ -1,5 +1,3 @@
----
-
 freebsd_qppliance_package_state: present
 cache_timeout: 600
 

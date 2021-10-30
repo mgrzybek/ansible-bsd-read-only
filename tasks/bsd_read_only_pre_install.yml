@@ -1,5 +1,3 @@
----
-
 - name: Pre-Install | Check operating system compatibility
   assert:
     fail_msg: This role must be applied to FreeBSD systems
@@ -21,6 +19,6 @@
 
 - name: Pre-Install | Set facts
   set_fact:
-    installed_packages: "{{ pkg_info.stdout_lines }}"
-    mqueue_stat: "{{ stat_result.stat }}"
+    installed_packages: '{{ pkg_info.stdout_lines }}'
+    mqueue_stat: '{{ stat_result.stat }}'
 
