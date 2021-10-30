@@ -1,7 +1,9 @@
 ---
 
 - name: Post-Install | Disable mailbox
-  when: mqueue_stat.islnk | lower == 'false'
+  when:
+  - mqueue_stat.exists | lower == 'true'
+  - mqueue_stat.islnk | lower == 'false'
   block:
   - name: Post-Install | Remove mqueue directory
     file: path={{ mqueue_stat.path }} state=absent
@@ -35,4 +37,16 @@
     fstype: ufs
     opts: ro
     state: present
+
+- name: Post-Install | Move pkg db
+  when: pkg_db.stat.exists is false
+  command: mv /var/db/pkg /mnt
+
+- name: Post-Install | Set pkg db dir to /mnt/pkg
+  lineinfile:
+    path: /usr/local/etc/pkg.conf
+    state: present
+    regexp: '#PKG_DBDIR ='
+    line: 'PKG_DBDIR = "/mnt/pkg";'
+  
 

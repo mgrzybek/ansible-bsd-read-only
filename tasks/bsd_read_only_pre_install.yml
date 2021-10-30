@@ -10,6 +10,11 @@
   register: pkg_info
   shell: pkg info | awk '{print $1}'
 
+- name: Pre-Install | Get pkg db path
+  register: pkg_db
+  stat:
+    path: /mnt/pkg
+
 - name: Pre-Install | Get mqueue status
   register: stat_result
   stat: path={{ bsd_read_only_mqueue }}
