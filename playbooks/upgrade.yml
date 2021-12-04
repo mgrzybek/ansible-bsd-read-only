@@ -1,0 +1,50 @@
+- hosts: all
+  vars:
+    fbsd_up_dir: /mnt/freebsd-update
+    fbsd_up_opts: -d {{ fbsd_up_dir }}
+    fbsd_up: freebsd-update {{ fbsd_up_opts }}
+    remount_rw: false
+
+  handlers:
+  - name: reboot
+    reboot:
+
+  tasks:
+  - name: Skip TrueNAS systems
+    assert:
+      that: ansible_kernel_version | regex_search("TRUENAS") == none
+      fail_msg: Cannot upgrade a TrueNAS appliance
+
+  - name: Set local facts
+    when: ansible_mounts | json_query('[0].options') == "ro"
+    set_fact:
+      remount_rw: true
+
+  - name: Mount / as read+write
+    when: remount_rw is true
+    command: mount -o rw /
+
+  - name: Create freebsd-update data dir
+    file:
+      path: '{{ fbsd_up_dir }}'
+      state: directory
+
+  - name: Start fetching
+    command: '{{ fbsd_up }} fetch'
+
+  - name: Check upgrade
+    command: '{{ fbsd_up }} updatesready'
+    register: update_ready
+    changed_when: false
+    failed_when:
+    - update_ready.rc != 0
+    - update_ready.rc != 2
+
+  - name: Start upgrade if needed
+    when: update_ready.rc != 2
+    command: '{{ fbsd_up }} install'
+    notify: reboot
+
+  - name: Remount read-only
+    when: update_ready.rc == 2
+    command: mount -o ro /
